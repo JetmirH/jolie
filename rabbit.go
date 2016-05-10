@@ -3,7 +3,8 @@ package main
 import (
 	"encoding/json"
 	"github.com/streadway/amqp"
-	"github.com/thethingsnetwork/server-shared"
+	"github.com/JetmirH/server-shared"
+	//"github.com/thethingsnetwork/server-shared"
 	"log"
 	"os"
 	"time"
@@ -19,6 +20,9 @@ type RabbitConsumer struct {
 	channel         *amqp.Channel
 	gatewayStatuses <-chan amqp.Delivery
 	rxPackets       <-chan amqp.Delivery
+	//Added by Jetmir
+	devStatis       <-chan amqp.Delivery
+	//End of addition
 }
 
 func ConnectRabbitConsumer() (Consumer, error) {
@@ -77,9 +81,20 @@ func (d *RabbitConsumer) Consume() (*shared.ConsumerQueues, error) {
 		return nil, err
 	}
 
+	//Added by Jetmir
+	d.devStatis, err = d.consumeQueue("device.statistics", "device.statistics")
+	if err != nil {
+		log.Printf("Failed to consume device statistics: %s", err.Error())
+		return nil, err
+	}
+	//End of addition
+
 	queues := &shared.ConsumerQueues{
 		make(chan *shared.GatewayStatus),
 		make(chan *shared.RxPacket),
+		//Added by Jetmir		
+		make(chan *shared.DevStats),
+		//End of addition
 	}
 	go d.handleDeliveries(queues)
 	return queues, nil
@@ -128,6 +143,17 @@ func (d *RabbitConsumer) handleDeliveries(queues *shared.ConsumerQueues) {
 			}
 			queues.RxPackets <- &rxPacket
 			delivery.Ack(false)
+		//Added by Jetmir
+		case delivery := <-d.devStatis:
+			var devStats shared.DevStats
+			err := json.Unmarshal(delivery.Body, &devStats)
+			if err != nil {
+				log.Printf("Failed to unmarshal RX packet: %s (%q)", err.Error(), delivery.Body)
+				continue
+			}
+			queues.DevStats <- &devStats
+			delivery.Ack(false)
+		//End of addition
 		}
 	}
 }

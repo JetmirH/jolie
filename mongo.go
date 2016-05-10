@@ -6,7 +6,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/thethingsnetwork/server-shared"
+	
+	"github.com/JetmirH/server-shared"
+	//"github.com/thethingsnetwork/server-shared"
 	"gopkg.in/mgo.v2"
 )
 
@@ -55,6 +57,15 @@ func (db *MongoDatabase) HandlePacket(packet *shared.RxPacket) {
 		log.Printf("Failed to save packet: %s", err.Error())
 	}
 }
+
+//Added by Jetmir
+func (db *MongoDatabase) HandleDevStats(packet *shared.DevStats) {
+	err := db.session.DB("jolie").C("device_statistics").Insert(packet)
+	if err != nil {
+		log.Printf("Failed to save packet: %s", err.Error())
+	}
+}
+//End of addition
 
 func (db *MongoDatabase) RecordGatewayStatus(status *shared.GatewayStatus) error {
 	return nil

@@ -1,7 +1,9 @@
 package main
 
 import (
-	"github.com/thethingsnetwork/server-shared"
+	
+	"github.com/JetmirH/server-shared"
+	//"github.com/thethingsnetwork/server-shared"
 	"log"
 )
 
@@ -85,6 +87,12 @@ func Handle(queues *shared.ConsumerQueues, handlers []PacketHandler) {
 			for _, h := range handlers {
 				h.HandlePacket(packet)
 			}
+		//Added by Jetmir
+		case devStats := <-queues.DevStats:
+			for _, h := range handlers {
+				h.HandleDevStats(devStats)
+			}
+		//End of additon
 		}
 	}
 }

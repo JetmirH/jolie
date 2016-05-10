@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	MQTT "git.eclipse.org/gitroot/paho/org.eclipse.paho.mqtt.golang.git"
-	"github.com/thethingsnetwork/server-shared"
+	
+	"github.com/JetmirH/server-shared"
+	//"github.com/thethingsnetwork/server-shared"
 	"log"
 	"os"
 )
@@ -57,4 +59,19 @@ func (c *MqttConsumer) HandlePacket(packet *shared.RxPacket) {
 		log.Printf("Failed to publish packet: %s", token.Error())
 	}
 	log.Printf("Published packet to topic %s", topic)
+}
+
+//Added by Jetmir
+func (c *MqttConsumer) HandleDevStats(packet *shared.DevStats) {
+	buffer, err := json.Marshal(packet)
+	if err != nil {
+		log.Printf("Failed to serialize device statistics: %s", err.Error())
+	}
+	topic := fmt.Sprintf("nodes/%X/devStats", packet.DevAddr)
+	token := c.client.Publish(topic, 0, false, buffer)
+	token.Wait()
+	if token.Error() != nil {
+		log.Printf("Failed to publish device statistics: %s", token.Error())
+	}
+	log.Printf("Published device statistics to topic %s", topic)
 }
